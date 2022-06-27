@@ -39,6 +39,8 @@ module.exports.getProductsById = async (event) => {
             WHERE p.id = '${productId}'`
       );
 
+      console.log("getProductsById. Received result:", product.rows);
+
       response.body = JSON.stringify(product.rows[0], null, 2);
 
       return response;

@@ -12,12 +12,7 @@ provider:
   runtime: nodejs12.x
   stage: dev
   region: eu-west-1
-  environment:
-    PG_HOST: rs-aws-database.cy8ogj0gxkz1.eu-west-1.rds.amazonaws.com
-    PG_PORT: 5432
-    PG_DATABASE: rs_shop_db
-    PG_USERNAME: postgres
-    PG_PASSWORD: cVB2DZVr4axS2xicNWyG
+
   # you can add statements to the Lambda function's IAM Role here
   #  iam:
   #    role:
