@@ -16,34 +16,32 @@ const db_options = {
 };
 
 module.exports.addProduct = async (event) => {
-  if (!event.body) {
-    return {
-      statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Credentials": true,
-      },
-      body: JSON.stringify(
-        {
-          message: "Bad request. Body is empty",
-          input: event,
-        },
-        null,
-        2
-      ),
-    };
-  }
-
-  const { title, description, price, count } = JSON.parse(event.body);
-
-  const client = new Client(db_options);
-  await client.connect();
-
-  console.log("Request data:".title, description, price, count);
+  const response = {
+    statusCode: 200,
+    isBase64Encoded: false,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": true,
+    },
+    body: null,
+  };
 
   try {
-    const addResult = await client.query(
-      `WITH new_product AS (
+    const client = new Client(db_options);
+    await client.connect();
+    await client.query("BEGIN");
+
+    try {
+      if (!JSON.parse(event.body)) {
+        throw new Error("Bad request. No parameters in the body");
+      }
+
+      const { title, description, price, count } = JSON.parse(event.body);
+
+      console.log("Request data:".title, description, price, count);
+
+      const addResult = await client.query(
+        `WITH new_product AS (
           INSERT INTO products(title, description, price) VALUES
           ('${title}', '${description}', ${price})
           RETURNING id
@@ -52,42 +50,47 @@ module.exports.addProduct = async (event) => {
         (
             (SELECT id FROM new_product),
             ${count}
-        )
-    `
-    );
+        )`
+      );
 
-    return {
-      statusCode: 200,
-      isBase64Encoded: false,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Credentials": true,
-      },
-      body: JSON.stringify(
+      response.body = JSON.stringify(
         { addResult: addResult.rowCount },
         null,
         2
-      ).toString(),
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      statusCode: 500,
-      isBase64Encoded: false,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Credentials": true,
-      },
-      body: JSON.stringify(
+      );
+
+      return response;
+    } catch (error) {
+      console.error(error);
+
+      response.statusCode = 400;
+      response.body = JSON.stringify(
         {
           errorMessage: error.stack,
           input: event,
         },
         null,
         2
-      ),
-    };
-  } finally {
-    client.end();
+      );
+
+      return response;
+    } finally {
+      await client.query("COMMIT");
+      await client.end();
+    }
+  } catch (error) {
+    console.error(error.stack);
+
+    response.statusCode = 400;
+    response.body = JSON.stringify(
+      {
+        errorMessage: error.stack,
+        input: event,
+      },
+      null,
+      2
+    );
+
+    return response;
   }
 };
