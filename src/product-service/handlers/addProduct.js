@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-const { Client } = require("pg");
+const { Client } = require('pg');
 const { PG_HOST, PG_PORT, PG_DATABASE, PG_USERNAME, PG_PASSWORD } = process.env;
 
 const db_options = {
@@ -20,8 +20,8 @@ module.exports.addProduct = async (event) => {
     statusCode: 200,
     isBase64Encoded: false,
     headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Credentials": true,
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true,
     },
     body: null,
   };
@@ -29,16 +29,16 @@ module.exports.addProduct = async (event) => {
   try {
     const client = new Client(db_options);
     await client.connect();
-    await client.query("BEGIN");
+    await client.query('BEGIN');
 
     try {
       if (!JSON.parse(event.body)) {
-        throw new Error("Bad request. No parameters in the body");
+        throw new Error('Bad request. No parameters in the body');
       }
 
       const { title, description, price, count } = JSON.parse(event.body);
 
-      console.log("Request data:".title, description, price, count);
+      console.log('Request data:'.title, description, price, count);
 
       const addResult = await client.query(
         `WITH new_product AS (
@@ -63,6 +63,8 @@ module.exports.addProduct = async (event) => {
     } catch (error) {
       console.error(error);
 
+      await client.query('ROLLBACK');
+
       response.statusCode = 400;
       response.body = JSON.stringify(
         {
@@ -75,7 +77,7 @@ module.exports.addProduct = async (event) => {
 
       return response;
     } finally {
-      await client.query("COMMIT");
+      await client.query('COMMIT');
       await client.end();
     }
   } catch (error) {
