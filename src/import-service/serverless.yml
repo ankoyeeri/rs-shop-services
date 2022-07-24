@@ -5,7 +5,7 @@ service: import-service
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
-frameworkVersion: "3"
+frameworkVersion: '3'
 
 provider:
   name: aws
@@ -17,19 +17,26 @@ provider:
   #  stage: dev
   #  region: us-east-1
 
+  environment:
+    SQS_URL: https://sqs.eu-west-1.amazonaws.com/143844320681/catalogItemsQueue
+
   iam:
     role:
       statements:
-        - Effect: "Allow"
+        - Effect: 'Allow'
           Action:
-            - "s3:ListBucket"
+            - 's3:ListBucket'
           Resource:
-            - "arn:aws:s3:::ankoyeeri-import-service-s3"
-        - Effect: "Allow"
+            - 'arn:aws:s3:::ankoyeeri-import-service-s3'
+        - Effect: 'Allow'
           Action:
-            - "s3:*"
+            - 's3:*'
           Resource:
-            - "arn:aws:s3:::ankoyeeri-import-service-s3/*"
+            - 'arn:aws:s3:::ankoyeeri-import-service-s3/*'
+        - Effect: 'Allow'
+          Action: 'sqs:*'
+          Resource:
+            - 'arn:aws:sqs:eu-west-1:143844320681:catalogItemsQueue'
 
 # you can add statements to the Lambda function's IAM Role here
 #  iam:
@@ -60,6 +67,13 @@ provider:
 #    - '!exclude-me-dir/**'
 #    - include-me.js
 #    - include-me-dir/**
+
+# resources:
+#   Resources:
+#     SQSQueue:
+#       Type: AWS::SQS::Queue
+#       Properties:
+#         QueueName: catalogItemsQueue
 
 functions:
   importProductsFile:
